@@ -157,7 +157,7 @@ class Attention(nn.Module):
 
         if self.fused_attn:
             with torch.backends.cuda.sdp_kernel(enable_math=False, enable_mem_efficient=False):
-                # Use context manager to force using flash attention
+                # 用上下文的方式强行使用fa
                 x = F.scaled_dot_product_attention(
                     q, k, v,
                     dropout_p=self.attn_drop.p if self.training else 0.,
