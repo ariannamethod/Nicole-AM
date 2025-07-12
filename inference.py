@@ -6,8 +6,11 @@ import torch
 from transformers import AutoModelForCausalLM
 import PIL.Image
 
-from nicole.models import NicoleForCausalLM, NicoleProcessor
-from nicole.serve.app_modules.utils import parse_ref_bbox
+from Nicole.models import (
+    NicoleVLV2Processor as NicoleProcessor,
+    NicoleVLV2ForCausalLM as NicoleForCausalLM,
+)
+from Nicole.serve.app_modules.utils import parse_ref_bbox
 
 
 def load_pil_images(conversations: List[Dict[str, str]]) -> List[PIL.Image.Image]:

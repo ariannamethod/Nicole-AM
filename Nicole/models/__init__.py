@@ -1,7 +1,7 @@
-from .processing_deepseek_vl_v2 import DeepseekVLV2Processor
-from .modeling_deepseek_vl_v2 import DeepseekVLV2ForCausalLM
+from .processing_nicole_vl_v2 import NicoleVLV2Processor
+from .modeling_nicole_vl_v2 import NicoleVLV2ForCausalLM
 
 __all__ = [
-    "DeepseekVLV2Processor",
-    "DeepseekVLV2ForCausalLM",
+    "NicoleVLV2Processor",
+    "NicoleVLV2ForCausalLM",
 ]
