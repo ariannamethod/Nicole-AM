@@ -10,13 +10,13 @@ from transformers import AutoModelForCausalLM
 
 def load_pretrained_model(model_path: str):
 
-    from Nicole.models.processing_nicole import NicoleProcessor
-    from Nicole.models.modeling_nicole import NicoleForCausalLM
+    from Nicole.models.processing_nicole_vl_v2 import NicoleVLV2Processor as NicoleProcessor
+    from Nicole.models.modeling_nicole import NicoleV2ForCausalLM
 
     vl_chat_processor = NicoleProcessor.from_pretrained(model_path)
     tokenizer = vl_chat_processor.tokenizer
 
-    vl_gpt: NicoleForCausalLM = AutoModelForCausalLM.from_pretrained(
+    vl_gpt: NicoleV2ForCausalLM = AutoModelForCausalLM.from_pretrained(
         model_path, trust_remote_code=True
     )
     vl_gpt = vl_gpt.to(torch.bfloat16).cuda().eval()

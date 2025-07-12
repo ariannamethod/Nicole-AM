@@ -731,8 +731,6 @@ class NicoleV2Attention(nn.Module):
         self.qk_nope_head_dim = config.qk_nope_head_dim
         self.q_head_dim = config.qk_nope_head_dim + config.qk_rope_head_dim
 
-          self.is_causal = True
-
         self.is_causal = True
 
         if self.q_lora_rank is None:
@@ -1717,7 +1715,7 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)
         logits = logits.float()
-              loss = None
+        loss = None
         if labels is not None:
             # Shift so that tokens < n predict n
             shift_logits = logits[..., :-1, :].contiguous()

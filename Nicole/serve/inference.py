@@ -12,7 +12,7 @@ from transformers import (
     TextIteratorStreamer,
 )
 
-from Nicole.models import NicoleProcessor, NicoleForCausalLM
+from Nicole.models import NicoleVLV2Processor as NicoleProcessor, NicoleVLV2ForCausalLM as NicoleForCausalLM
 from Nicole.models.conversation import Conversation
 
 

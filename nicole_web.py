@@ -28,22 +28,22 @@ from PIL import Image
 import gradio as gr
 import torch
 
-from nicole.serve.app_modules.gradio_utils import (
+from Nicole.serve.app_modules.gradio_utils import (
     cancel_outputing,
     delete_last_conversation,
     reset_state,
     reset_textbox,
     wrap_gen_fn,
 )
-from nicole.serve.app_modules.overwrites import reload_javascript
-from nicole.serve.app_modules.presets import (
+from Nicole.serve.app_modules.overwrites import reload_javascript
+from Nicole.serve.app_modules.presets import (
     CONCURRENT_COUNT,
     MAX_EVENTS,
     description,
     description_top,
     title
 )
-from nicole.serve.app_modules.utils import (
+from Nicole.serve.app_modules.utils import (
     configure_logger,
     is_variable_assigned,
     strip_stop_words,
@@ -52,12 +52,12 @@ from nicole.serve.app_modules.utils import (
     display_example
 )
 
-from nicole.serve.inference import (
+from Nicole.serve.inference import (
     convert_conversation_to_prompts,
     nicole_generate,
     load_nicole_model,
 )
-from nicole.models.conversation import SeparatorStyle
+from Nicole.models.conversation import SeparatorStyle
 
 logger = configure_logger()
 
