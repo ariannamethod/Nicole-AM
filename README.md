@@ -34,7 +34,9 @@ DeepSeek-VL 2 provides the backbone for Nicole. The following capabilities come 
 - **Long context** – the model can handle prompts and conversations up to several thousand tokens.
 - **Visual grounding** and **in-context learning** – complex visual question answering is supported through special tokens such as `<image>`, `<|ref|>{query}<|/ref|>` and `<|grounding|>{question}`.
 
-The official DeepSeek-VL 2 README provides more exhaustive details about training data, model sizes and license. Nicole simply reuses the model weights and processing code.
+The official DeepSeek-VL 2 README provides more exhaustive details about training data, model sizes and license. At this stage Nicole relies on the standard DeepSeek-VL 2 weights, which remain fully compatible with our code.
+
+Once the project exits the beta phase we plan to release our own fine-tuned weights specifically for Nicole. Stay tuned for updates.
 
 ## Usage
 
