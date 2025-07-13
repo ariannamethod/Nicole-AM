@@ -370,6 +370,11 @@ def predict(
 
             yield gradio_chatbot_output, to_gradio_history(conversation), "Generating..."
 
+    genesis_result = conversation.apply_genesis_filter(nicole_gpt, tokenizer)
+    if genesis_result:
+        response = genesis_result["final_resonance"]
+        gradio_chatbot_output[-1][1] = response
+
     if last_image is not None:
         vg_image = parse_ref_bbox(response, last_image)
         if vg_image is not None:
