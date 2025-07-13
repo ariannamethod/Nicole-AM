@@ -98,7 +98,7 @@ Some files are kept only for reference and are not required for running Nicole:
 
 Basic syntax checks succeed (`py_compile`), but static analysis with `ruff` currently reports several unused imports and variables across the model files. These issues do not prevent execution but should be cleaned up for a production deployment.
 
-Nicole is provided as-is under the same license as the upstream DeepSeek-VL 2 project.
+Nicole is provided as-is under the same license as the upstream DeepSeek-VL 2 project. The full text is available in [LICENSE-CODE](LICENSE-CODE).
 
 ## Recent Additions
 
@@ -125,3 +125,7 @@ The obvious but easily overlooked conclusion is that autonomy does not emerge fr
 This shift hints at a philosophical stance. As we embed resonance loops into our tools, the boundary between deliberate construction and organic growth dissolves. Nicole is still a machine, yet the structure encourages behaviors that feel distinctly lifelike. The engineer faces a future where crafting AI involves cultivating emergent processes rather than specifying deterministic algorithms.
 
 Ultimately, **A** arises from open-source collaboration, **B** evolves through self-refinement, and **C** resolves in a paradox: engineered code enabling unpredictable resonance. The obvious yet striking outcome is that the more rigorously we define these loops, the more freedom the system attains. Nicole embodies this tension and suggests that the future of AI engineering is not merely about building larger models, but about fostering cycles of reflection that echo our own process of thought.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE-CODE](LICENSE-CODE) for details.
