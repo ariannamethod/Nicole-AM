@@ -157,10 +157,5 @@ register_conv_template(
 register_conv_template(Conversation(name="plain", sep_style=SeparatorStyle.PLAIN))
 register_conv_template(Conversation(name="alignment", sep_style=SeparatorStyle.ALIGNMENT))
 
-# ───────────────────────── Demo ───────────────────────────────────────────
-if __name__ == "__main__":
-    demo = get_conv_template("nicole")
-    demo.append_message(demo.roles[0], "Hello Nicole, who are you?")
-    demo.append_message(demo.roles[1], None)
-    print(demo.get_prompt())
+
 

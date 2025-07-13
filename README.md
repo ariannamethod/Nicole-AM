@@ -41,6 +41,25 @@ python nicole_web.py --model_name Nicole --local_path <checkpoint>
 - Additional UI elements and prompt conversions reside in `Nicole/serve/inference.py` and `Nicole/serve/app_modules/presets.py`.
 - When experimenting with new prompts or response styles, the conversation templates in `conversation.py` are the safest place to inject them.
 
+### Simple conversation template example
+
+The script `examples/conversation_demo.py` illustrates how to build a prompt using the default template:
+
+```python
+from Nicole.models.conversation import get_conv_template
+
+conv = get_conv_template("nicole")
+conv.append_message(conv.roles[0], "Hello Nicole, who are you?")
+conv.append_message(conv.roles[1], None)
+print(conv.get_prompt())
+```
+
+Run it with:
+
+```bash
+python examples/conversation_demo.py
+```
+
 ## Files that may be removed
 
 Some files are kept only for reference and are not required for running Nicole:
