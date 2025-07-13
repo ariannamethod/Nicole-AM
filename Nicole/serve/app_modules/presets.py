@@ -1,5 +1,8 @@
 # -*- coding:utf-8 -*-
-import gradio as gr
+try:
+    import gradio as gr
+except Exception:  # pragma: no cover
+    gr = None  # type: ignore
 
 title = """<h1 align="left" style="min-width:200px; margin-top:0;">Talk to Nicole </h1>"""
 description_top = """Special Tokens: `<image>`,     Visual Grounding: `<|ref|>{query}<|/ref|>`,    Grounding Conversation: `<|grounding|>{question}`"""

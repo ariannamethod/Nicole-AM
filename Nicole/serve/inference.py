@@ -2,15 +2,27 @@
 
 from threading import Thread
 from typing import List
+from PIL import Image
 
-import torch
-import transformers
-from transformers import (
-    AutoModelForCausalLM,
-    StoppingCriteria,
-    StoppingCriteriaList,
-    TextIteratorStreamer,
-)
+try:
+    import torch
+except Exception:  # pragma: no cover
+    torch = None  # type: ignore
+
+try:
+    import transformers
+except Exception:  # pragma: no cover
+    transformers = None  # type: ignore
+
+try:
+    from transformers import (
+        AutoModelForCausalLM,
+        StoppingCriteria,
+        StoppingCriteriaList,
+        TextIteratorStreamer,
+    )
+except Exception:  # pragma: no cover
+    AutoModelForCausalLM = StoppingCriteria = StoppingCriteriaList = TextIteratorStreamer = object  # type: ignore
 
 from Nicole.models import NicoleVLV2Processor as NicoleProcessor, NicoleVLV2ForCausalLM as NicoleForCausalLM
 from Nicole.models.conversation import Conversation
@@ -30,16 +42,18 @@ def load_model(model_path, dtype=torch.bfloat16):
 def convert_conversation_to_prompts(conversation: Conversation):
     conv_prompts = []
 
-    last_image = None
+    last_image: Image | None = None
 
     messages = conversation.messages
     for i in range(0, len(messages), 2):
 
-        if isinstance(messages[i][1], tuple):
+        if isinstance(messages[i][1], tuple):  # type: ignore[misc]
             text, images = messages[i][1]
-            last_image = images[-1]
+            if images:
+                last_image = images[-1]
         else:
-            text, images = messages[i][1], []
+            text = messages[i][1]
+            images: List[Image] = []
 
         prompt = {
             "role": messages[i][0],

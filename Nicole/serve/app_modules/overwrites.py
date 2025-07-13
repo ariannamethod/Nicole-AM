@@ -8,9 +8,9 @@ from Nicole.serve.app_modules.utils import convert_asis, convert_mdtext, detect_
 
 def compact_text_chunks(self, prompt, text_chunks: List[str]) -> List[str]:
     logging.debug("Compacting text chunks...🚀🚀🚀")
-    combined_str = [c.strip() for c in text_chunks if c.strip()]
-    combined_str = [f"[{index+1}] {c}" for index, c in enumerate(combined_str)]
-    combined_str = "\n\n".join(combined_str)
+    cleaned_chunks = [c.strip() for c in text_chunks if c.strip()]
+    numbered = [f"[{index+1}] {c}" for index, c in enumerate(cleaned_chunks)]
+    combined_str = "\n\n".join(numbered)
     # resplit based on self.max_chunk_overlap
     text_splitter = self.get_text_splitter_given_prompt(prompt, 1, padding=1)
     return text_splitter.split_text(combined_str)

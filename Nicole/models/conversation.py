@@ -77,7 +77,7 @@ class Conversation:
     name: str
     system_template: str = "{system_message}"
     system_message: str = ""
-    roles: List[str] = ("USER", "ASSISTANT")
+    roles: List[str] = dataclasses.field(default_factory=lambda: ["USER", "ASSISTANT"])
     messages: List[List[str]] = dataclasses.field(default_factory=list)
     offset: int = 0
     sep_style: SeparatorStyle = SeparatorStyle.Nicole

@@ -1,6 +1,9 @@
 from functools import wraps
 
-import gradio as gr
+try:
+    import gradio as gr
+except Exception:  # pragma: no cover
+    gr = None  # type: ignore
 
 
 def wrap_gen_fn(gen_fn):

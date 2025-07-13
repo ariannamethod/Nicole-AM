@@ -3,7 +3,7 @@ from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
 
-NICOLE_PRETRAINED_CONFIG_ARCHIVE_MAP = {}
+NICOLE_PRETRAINED_CONFIG_ARCHIVE_MAP: dict[str, str] = {}
 
 class NicoleV2Config(PretrainedConfig):
     r"""
