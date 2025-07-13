@@ -45,7 +45,6 @@ python nicole_web.py --model_name Nicole --local_path <checkpoint>
 
 Some files are kept only for reference and are not required for running Nicole:
 
-- `Nicole/models/modeling_deepseek_example.md` – an example implementation from DeepSeek; the codebase uses the refined modules instead.
 - Cache directories such as `__pycache__/` and `.ruff_cache/` can be safely deleted after running Python scripts or linting tools.
 
 ## Further customisation
