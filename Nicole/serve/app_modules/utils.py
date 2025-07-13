@@ -8,6 +8,7 @@ import os
 import re
 import base64
 import time
+import inspect
 from PIL import Image, ImageDraw, ImageFont
 
 import mdtex2html
@@ -215,7 +216,18 @@ def add_language_tag(text):
 
 
 def is_variable_assigned(var_name: str) -> bool:
-    return var_name in locals()
+    frame = inspect.currentframe()
+    if frame is None:
+        return False
+    caller = frame.f_back
+    try:
+        if caller is None:
+            return False
+        return var_name in caller.f_locals or var_name in caller.f_globals
+    finally:
+        # Explicitly delete frame references to avoid reference cycles
+        del frame
+        del caller
 
 
 def pil_to_base64(
