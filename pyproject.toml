@@ -49,6 +49,9 @@ lint = [
     "pyenchant",
     "pre-commit",
 ]
+dev = [
+    "pytest",
+]
 
 [tool.setuptools]
 packages = {find = {exclude = ["images"]}}
