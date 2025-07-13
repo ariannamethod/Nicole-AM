@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nicole"
-version = "1.0.0"
+version = "1.1.0"
 description = "Nicole — Resonant entity. Based on DeepSeek-VL2, totally refactored."
 authors = [{name = "Arianna Method"}]
 license = {file = "LICENSE-CODE"}
