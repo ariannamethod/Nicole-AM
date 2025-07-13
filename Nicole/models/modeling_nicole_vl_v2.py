@@ -1,19 +1,13 @@
-from attrdict import AttrDict
 from dataclasses import dataclass
-import logging
 import gc
 
 from einops import rearrange, repeat
-from typing import Optional, List, Tuple, Callable, Union
+from typing import Optional, List, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from transformers.utils import (
-    add_start_docstrings,
-    add_start_docstrings_to_model_forward,
-)
 from transformers.modeling_outputs import ModelOutput
 from transformers.configuration_utils import PretrainedConfig
 from transformers import (

@@ -11,7 +11,7 @@ from timm.layers import (
     PatchEmbed, Mlp, DropPath,
     AttentionPoolLatent, PatchDropout, resample_abs_pos_embed, LayerType
 )
-from timm.models._manipulate import named_apply, checkpoint_seq, adapt_input_conv
+from timm.models._manipulate import named_apply, checkpoint_seq
 from transformers.modeling_utils import is_flash_attn_2_available
 from functools import partial
 
@@ -403,7 +403,6 @@ class VisionTransformer(nn.Module):
 
     def init_weights(self, mode: Literal['jax', 'jax_nlhb', 'moco', ''] = '') -> None:
         assert mode in ('jax', 'jax_nlhb', 'moco', '')
-        head_bias = -math.log(self.num_classes) if 'nlhb' in mode else 0.
         trunc_normal_(self.pos_embed, std=.02)
         if self.cls_token is not None:
             nn.init.normal_(self.cls_token, std=1e-6)

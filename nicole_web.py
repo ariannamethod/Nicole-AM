@@ -19,9 +19,6 @@
 
 # -*- coding:utf-8 -*-
 from argparse import ArgumentParser
-
-import io
-import sys
 import base64
 from PIL import Image
 
@@ -378,7 +375,7 @@ def predict(
     if last_image is not None:
         vg_image = parse_ref_bbox(response, last_image)
         if vg_image is not None:
-            vg_base64 = pil_to_base64(vg_image, f"vg", max_size=800, min_size=400)
+            vg_base64 = pil_to_base64(vg_image, "vg", max_size=800, min_size=400)
             gradio_chatbot_output[-1][1] += vg_base64
             yield gradio_chatbot_output, to_gradio_history(conversation), "Generating..."
 
@@ -449,9 +446,6 @@ def build_demo(args):
     if not args.lazy_load:
         fetch_nicole_model(args.model_name)
 
-    with open("nicole/serve/assets/custom.css", "r", encoding="utf-8") as f:
-        customCSS = f.read()
-
     with gr.Blocks(theme=gr.themes.Soft()) as demo:
         history = gr.State([])
         input_text = gr.State()
@@ -497,7 +491,7 @@ def build_demo(args):
 
                 upload_images.change(preview_images, inputs=upload_images, outputs=gallery)
 
-                with gr.Tab(label="Parameter Setting") as parameter_row:
+                with gr.Tab(label="Parameter Setting"):
                     top_p = gr.Slider(
                         minimum=-0,
                         maximum=1.0,
