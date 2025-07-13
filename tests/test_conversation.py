@@ -2,8 +2,8 @@ import sys
 import types
 
 # Provide stubs for missing heavy dependencies
-if 'torch' not in sys.modules:
-    torch_stub = types.ModuleType('torch')
+if "torch" not in sys.modules:
+    torch_stub = types.ModuleType("torch")
 
     class DummyTensor:
         def __init__(self, data):
@@ -31,10 +31,10 @@ if 'torch' not in sys.modules:
 
     torch_stub.tensor = tensor
     torch_stub.cosine_similarity = cosine_similarity
-    sys.modules['torch'] = torch_stub
+    sys.modules["torch"] = torch_stub
 
-if 'transformers' not in sys.modules:
-    transformers_stub = types.ModuleType('transformers')
+if "transformers" not in sys.modules:
+    transformers_stub = types.ModuleType("transformers")
 
     class PreTrainedModel:
         pass
@@ -44,12 +44,14 @@ if 'transformers' not in sys.modules:
 
     transformers_stub.PreTrainedModel = PreTrainedModel
     transformers_stub.PreTrainedTokenizer = PreTrainedTokenizer
-    sys.modules['transformers'] = transformers_stub
+    sys.modules["transformers"] = transformers_stub
 
 import importlib.util
 from pathlib import Path
 
-conversation_path = Path(__file__).resolve().parents[1] / "Nicole" / "models" / "conversation.py"
+conversation_path = (
+    Path(__file__).resolve().parents[1] / "Nicole" / "models" / "conversation.py"
+)
 spec = importlib.util.spec_from_file_location("conversation", conversation_path)
 conversation = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(conversation)
@@ -63,7 +65,7 @@ def test_apply_genesis_filter_updates_message(monkeypatch):
     called = {}
 
     def fake_genesis(model, tokenizer, message, **kwargs):
-        called['args'] = (model, tokenizer, message)
+        called["args"] = (model, tokenizer, message)
         return {"final_resonance": "filtered", "layers": 1, "evolution": 0.0}
 
     monkeypatch.setattr(conversation, "genesis_nicole", fake_genesis)

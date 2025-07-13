@@ -3,7 +3,11 @@ from __future__ import annotations
 import logging
 from typing import List, Tuple
 
-from Nicole.serve.app_modules.utils import convert_asis, convert_mdtext, detect_converted_mark
+from Nicole.serve.app_modules.utils import (
+    convert_asis,
+    convert_mdtext,
+    detect_converted_mark,
+)
 
 
 def compact_text_chunks(self, prompt, text_chunks: List[str]) -> List[str]:
@@ -41,4 +45,3 @@ def postprocess(
 def reload_javascript():
     """Placeholder for compatibility after removing custom JS injection."""
     print("Reloading javascript...")
-

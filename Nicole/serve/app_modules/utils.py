@@ -1,17 +1,17 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+import base64
 import html
-import logging
 import io
+import logging
 import os
 import re
-import base64
 import time
-from PIL import Image, ImageDraw, ImageFont
 
 import mdtex2html
 from markdown import markdown  # type: ignore
+from PIL import Image, ImageDraw, ImageFont
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import ClassNotFound, get_lexer_by_name, guess_lexer
@@ -20,7 +20,7 @@ from Nicole.serve.app_modules.presets import (
     ALREADY_CONVERTED_MARK,
     BOX2COLOR,
     MAX_IMAGE_SIZE,
-    MIN_IMAGE_SIZE
+    MIN_IMAGE_SIZE,
 )
 
 logger = logging.getLogger("gradio_logger")
@@ -32,9 +32,7 @@ def configure_logger():
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs("Nicole/serve/logs", exist_ok=True)
-    file_handler = logging.FileHandler(
-        f"Nicole/serve/logs/{timestr}_gradio_log.log"
-    )
+    file_handler = logging.FileHandler(f"Nicole/serve/logs/{timestr}_gradio_log.log")
     console_handler = logging.StreamHandler()
 
     formatter = logging.Formatter(
@@ -225,7 +223,7 @@ def pil_to_base64(
     max_size: int = MAX_IMAGE_SIZE,
     min_size: int = MIN_IMAGE_SIZE,
     format: str = "JPEG",
-    quality: int = 95
+    quality: int = 95,
 ) -> str:
 
     if resize:
@@ -254,8 +252,8 @@ def parse_ref_bbox(response, image: Image.Image):
         image_w, image_h = image.size
         draw = ImageDraw.Draw(image)
 
-        ref = re.findall(r'<\|ref\|>.*?<\|/ref\|>', response)
-        bbox = re.findall(r'<\|det\|>.*?<\|/det\|>', response)
+        ref = re.findall(r"<\|ref\|>.*?<\|/ref\|>", response)
+        bbox = re.findall(r"<\|det\|>.*?<\|/det\|>", response)
         assert len(ref) == len(bbox)
 
         if len(ref) == 0:
@@ -263,10 +261,10 @@ def parse_ref_bbox(response, image: Image.Image):
 
         boxes, labels = [], []
         for box, label in zip(bbox, ref):
-            box = box.replace('<|det|>', '').replace('<|/det|>', '')
-            label = label.replace('<|ref|>', '').replace('<|/ref|>', '')
+            box = box.replace("<|det|>", "").replace("<|/det|>", "")
+            label = label.replace("<|ref|>", "").replace("<|/ref|>", "")
             box = box[1:-1]
-            for onebox in re.findall(r'\[.*?\]', box):
+            for onebox in re.findall(r"\[.*?\]", box):
                 boxes.append(eval(onebox))
                 labels.append(label)
 
