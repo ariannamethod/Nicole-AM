@@ -10,6 +10,8 @@ import dataclasses
 from enum import IntEnum, auto
 from typing import Dict, List
 
+from Nicole.utils.genesis_nicole import genesis_nicole
+
 # ─────────────────────── Nicole Unified Prompt ───────────────────────────
 NICOLE_CORE_PROMPT = (
     """
@@ -101,6 +103,18 @@ class Conversation:
     def copy(self):
         return dataclasses.replace(self, messages=[m.copy() for m in self.messages])
 
+    def apply_genesis_filter(self, model, tokenizer, **kwargs):
+        """Run the genesis filter on the last assistant message."""
+        if not self.messages:
+            return None
+        role, msg = self.messages[-1]
+        if role != self.roles[1] or msg is None:
+            return None
+
+        result = genesis_nicole(model, tokenizer, msg, **kwargs)
+        self.messages[-1][1] = result["final_resonance"]
+        return result
+
 
 # ───────────────────────── Template Registry ─────────────────────────────
 conv_templates: Dict[str, Conversation] = {}
@@ -149,3 +163,4 @@ if __name__ == "__main__":
     demo.append_message(demo.roles[0], "Hello Nicole, who are you?")
     demo.append_message(demo.roles[1], None)
     print(demo.get_prompt())
+
