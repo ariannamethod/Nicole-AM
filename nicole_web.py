@@ -20,10 +20,13 @@
 # -*- coding:utf-8 -*-
 from argparse import ArgumentParser
 import base64
+from typing import List
+
 from PIL import Image
 
 import gradio as gr
 import torch
+from transformers import pipeline
 
 from Nicole.serve.app_modules.gradio_utils import (
     cancel_outputing,
@@ -70,6 +73,28 @@ NICOLE_MODELS = [
 
 DEPLOY_MODELS = dict()
 IMAGE_TOKEN = "<image>"
+CAPTION_PIPELINE = None
+
+
+def load_caption_model():
+    """Load or return the cached captioning pipeline."""
+    global CAPTION_PIPELINE
+    if CAPTION_PIPELINE is None:
+        device = 0 if torch.cuda.is_available() else -1
+        CAPTION_PIPELINE = pipeline(
+            "image-to-text",
+            model="Salesforce/blip-image-captioning-base",
+            device=device,
+        )
+    return CAPTION_PIPELINE
+
+
+def caption_images(images: List[Image.Image]) -> str:
+    """Return a single caption for a list of images."""
+    pipe = load_caption_model()
+    results = pipe(images)
+    captions = [r.get("generated_text", "") for r in results]
+    return " ".join(captions)
 
 examples_list = [
     # visual grounding - 1
@@ -311,8 +336,18 @@ def predict(
         tokenizer, nicole_gpt, nicole_chat_processor = fetch_nicole_model(model_select_dropdown)
 
         if text == "":
-            yield chatbot, history, "Empty context."
-            return
+            if args.auto_caption and images:
+                loaded_images = []
+                for img_or_file in images:
+                    if isinstance(img_or_file, Image.Image):
+                        loaded_images.append(img_or_file)
+                    else:
+                        loaded_images.append(Image.open(img_or_file.name).convert("RGB"))
+                caption = caption_images(loaded_images)
+                text = f"Genesis4-style caption: {caption}"
+            else:
+                yield chatbot, history, "Empty context."
+                return
     except KeyError:
         yield [[text, "No Model Found"]], [], "No Model Found"
         return
@@ -628,6 +663,11 @@ if __name__ == "__main__":
                         help="chunk size for the model for prefiiling. "
                              "When using 40G gpu for nicole-small, set a chunk_size for incremental_prefilling."
                              "Otherwise, default value is -1, which means we do not use incremental_prefilling.")
+    parser.add_argument(
+        "--auto_caption",
+        action="store_true",
+        help="Generate Genesis4-style caption when text is empty and images are provided",
+    )
     args = parser.parse_args()
 
     demo = build_demo(args)
