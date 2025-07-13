@@ -298,7 +298,7 @@ class NicoleVLV2Processor(ProcessorMixin):
 
         assert len(tokenized_data) == len(
             images_seq_mask), f"format_messages_v2: tokenized_str's length {len(tokenized_str)} is not equal to imags_seq_mask's length {len(images_seq_mask)}"
-        assert len(images_spatial_crop) == len(num_image_tokens), f"image number should be compatible"
+        assert len(images_spatial_crop) == len(num_image_tokens), "image number should be compatible"
 
         return tokenized_data, masked_tokenized_data, images_list, images_seq_mask, images_spatial_crop, num_image_tokens
 

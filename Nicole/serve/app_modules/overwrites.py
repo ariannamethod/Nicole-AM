@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import List, Tuple
 
-from Nicole.serve.app_modules.presets import gr
 from Nicole.serve.app_modules.utils import convert_asis, convert_mdtext, detect_converted_mark
 
 
