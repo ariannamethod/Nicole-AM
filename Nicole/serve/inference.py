@@ -2,6 +2,7 @@
 
 from threading import Thread
 from typing import List
+
 from PIL import Image
 
 try:
@@ -24,7 +25,8 @@ try:
 except Exception:  # pragma: no cover
     AutoModelForCausalLM = StoppingCriteria = StoppingCriteriaList = TextIteratorStreamer = object  # type: ignore
 
-from Nicole.models import NicoleVLV2Processor as NicoleProcessor, NicoleVLV2ForCausalLM as NicoleForCausalLM
+from Nicole.models import NicoleVLV2ForCausalLM as NicoleForCausalLM
+from Nicole.models import NicoleVLV2Processor as NicoleProcessor
 from Nicole.models.conversation import Conversation
 
 
@@ -55,11 +57,7 @@ def convert_conversation_to_prompts(conversation: Conversation):
             text = messages[i][1]
             images: List[Image] = []
 
-        prompt = {
-            "role": messages[i][0],
-            "content": text,
-            "images": images
-        }
+        prompt = {"role": messages[i][0], "content": text, "images": images}
         response = {"role": messages[i + 1][0], "content": messages[i + 1][1]}
         conv_prompts.extend([prompt, response])
 
@@ -94,7 +92,7 @@ def nicole_generate(
     temperature: float = 1.0,
     top_p: float = 1.0,
     repetition_penalty: float = 1.1,
-    chunk_size: int = -1
+    chunk_size: int = -1,
 ):
     pil_images = []
     for message in conversations:
@@ -107,7 +105,7 @@ def nicole_generate(
         images=pil_images,
         inference_mode=True,
         force_batchify=True,
-        system_prompt=""
+        system_prompt="",
     ).to(vl_gpt.device)
 
     return generate(
@@ -119,7 +117,7 @@ def nicole_generate(
         repetition_penalty=repetition_penalty,
         top_p=top_p,
         stop_words=stop_words,
-        chunk_size=chunk_size
+        chunk_size=chunk_size,
     )
 
 
@@ -133,7 +131,7 @@ def generate(
     repetition_penalty=1.1,
     top_p: float = 0.95,
     stop_words: List[str] = [],
-    chunk_size: int = -1
+    chunk_size: int = -1,
 ):
     """Stream the text output from the multimodality model with prompt and image inputs."""
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
@@ -152,7 +150,7 @@ def generate(
             images_seq_mask=prepare_inputs.images_seq_mask,
             images_spatial_crop=prepare_inputs.images_spatial_crop,
             attention_mask=prepare_inputs.attention_mask,
-            chunk_size=chunk_size
+            chunk_size=chunk_size,
         )
     else:
         inputs_embeds = vl_gpt.prepare_inputs_embeds(**prepare_inputs)

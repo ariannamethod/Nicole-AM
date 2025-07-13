@@ -17,17 +17,18 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import base64
+
 # -*- coding:utf-8 -*-
 from argparse import ArgumentParser
-import base64
 from typing import List
-
-from PIL import Image
 
 import gradio as gr
 import torch
+from PIL import Image
 from transformers import pipeline
 
+from Nicole.models.conversation import SeparatorStyle
 from Nicole.serve.app_modules.gradio_utils import (
     cancel_outputing,
     delete_last_conversation,
@@ -41,23 +42,21 @@ from Nicole.serve.app_modules.presets import (
     MAX_EVENTS,
     description,
     description_top,
-    title
+    title,
 )
 from Nicole.serve.app_modules.utils import (
     configure_logger,
+    display_example,
     is_variable_assigned,
-    strip_stop_words,
     parse_ref_bbox,
     pil_to_base64,
-    display_example
+    strip_stop_words,
 )
-
 from Nicole.serve.inference import (
     convert_conversation_to_prompts,
-    nicole_generate,
     load_nicole_model,
+    nicole_generate,
 )
-from Nicole.models.conversation import SeparatorStyle
 
 logger = configure_logger()
 
@@ -65,7 +64,6 @@ NICOLE_MODELS = [
     "Nicole-tiny",
     "Nicole-small",
     "Nicole",
-
     "ariannamethod/nicole-tiny",
     "ariannamethod/nicole-small",
     "ariannamethod/nicole",
@@ -96,56 +94,47 @@ def caption_images(images: List[Image.Image]) -> str:
     captions = [r.get("generated_text", "") for r in results]
     return " ".join(captions)
 
+
 examples_list = [
     # visual grounding - 1
     [
         ["images/visual_grounding_1.jpeg"],
         "<|ref|>The giraffe at the back.<|/ref|>",
     ],
-
     # visual grounding - 2
     [
         ["images/visual_grounding_2.jpg"],
         "Find <|ref|>the calm woman<|/ref|>",
     ],
-
     # visual grounding - 3
     [
         ["images/visual_grounding_3.png"],
         "Find all the <|ref|>Watermelon slices<|/ref|>",
     ],
-
     # grounding conversation
     [
         ["images/grounding_conversation_1.jpeg"],
         "<|grounding|>I want to throw out the trash now, what should I do?",
     ],
-
     # in-context visual grounding
     [
-        [
-            "images/incontext_visual_grounding_1.jpeg",
-            "images/icl_vg_2.jpeg"
-        ],
-        "<|grounding|>In the first image, an object within the red rectangle is marked. Locate the object of the same category in the second image."
+        ["images/incontext_visual_grounding_1.jpeg", "images/icl_vg_2.jpeg"],
+        "<|grounding|>In the first image, an object within the red rectangle is marked. Locate the object of the same category in the second image.",
     ],
-
     # vqa
     [
         ["images/vqa_1.jpg"],
         "Describe each stage of this image in detail",
     ],
-
     # multi-images
     [
         [
             "images/multi_image_1.jpeg",
             "images/multi_image_2.jpeg",
-            "images/multi_image_3.jpeg"
+            "images/multi_image_3.jpeg",
         ],
         "Can you help me make a dish from these ingredients?",
-    ]
-
+    ],
 ]
 
 
@@ -253,7 +242,7 @@ def generate_prompt_with_history(
 def to_gradio_chatbot(conv):
     """Convert the conversation to gradio chatbot format."""
     ret = []
-    for i, (role, msg) in enumerate(conv.messages[conv.offset:]):
+    for i, (role, msg) in enumerate(conv.messages[conv.offset :]):
         if i % 2 == 0:
             if type(msg) is tuple:
                 msg, images = msg
@@ -264,10 +253,17 @@ def to_gradio_chatbot(conv):
                             with open(image, "rb") as f:
                                 data = f.read()
                             img_b64_str = base64.b64encode(data).decode()
-                            image_str = (f'<img src="data:image/png;base64,{img_b64_str}" '
-                                         f'alt="user upload image" style="max-width: 300px; height: auto;" />')
+                            image_str = (
+                                f'<img src="data:image/png;base64,{img_b64_str}" '
+                                f'alt="user upload image" style="max-width: 300px; height: auto;" />'
+                            )
                         else:
-                            image_str = pil_to_base64(image, f"user upload image_{j}", max_size=800, min_size=400)
+                            image_str = pil_to_base64(
+                                image,
+                                f"user upload image_{j}",
+                                max_size=800,
+                                min_size=400,
+                            )
 
                         # replace the <image> tag in the message
                         msg = msg.replace(IMAGE_TOKEN, image_str, 1)
@@ -279,7 +275,7 @@ def to_gradio_chatbot(conv):
 
 def to_gradio_history(conv):
     """Convert the conversation to gradio history state."""
-    return conv.messages[conv.offset:]
+    return conv.messages[conv.offset :]
 
 
 def get_prompt(conv) -> str:
@@ -311,7 +307,7 @@ def transfer_input(input_text, input_images):
         input_images,
         gr.update(value=""),
         gr.update(value=None),
-        gr.Button(visible=True)
+        gr.Button(visible=True),
     )
 
 
@@ -333,7 +329,9 @@ def predict(
     """
     print("running the prediction function")
     try:
-        tokenizer, nicole_gpt, nicole_chat_processor = fetch_nicole_model(model_select_dropdown)
+        tokenizer, nicole_gpt, nicole_chat_processor = fetch_nicole_model(
+            model_select_dropdown
+        )
 
         if text == "":
             if args.auto_caption and images:
@@ -342,7 +340,9 @@ def predict(
                     if isinstance(img_or_file, Image.Image):
                         loaded_images.append(img_or_file)
                     else:
-                        loaded_images.append(Image.open(img_or_file.name).convert("RGB"))
+                        loaded_images.append(
+                            Image.open(img_or_file.name).convert("RGB")
+                        )
                 caption = caption_images(loaded_images)
                 text = f"Genesis4-style caption: {caption}"
             else:
@@ -393,14 +393,16 @@ def predict(
             temperature=temperature,
             repetition_penalty=repetition_penalty,
             top_p=top_p,
-            chunk_size=args.chunk_size
+            chunk_size=args.chunk_size,
         ):
             full_response += x
             response = strip_stop_words(full_response, stop_words)
             conversation.update_last_message(response)
             gradio_chatbot_output[-1][1] = response
 
-            yield gradio_chatbot_output, to_gradio_history(conversation), "Generating..."
+            yield gradio_chatbot_output, to_gradio_history(
+                conversation
+            ), "Generating..."
 
     genesis_result = conversation.apply_genesis_filter(nicole_gpt, tokenizer)
     if genesis_result:
@@ -412,7 +414,9 @@ def predict(
         if vg_image is not None:
             vg_base64 = pil_to_base64(vg_image, "vg", max_size=800, min_size=400)
             gradio_chatbot_output[-1][1] += vg_base64
-            yield gradio_chatbot_output, to_gradio_history(conversation), "Generating..."
+            yield gradio_chatbot_output, to_gradio_history(
+                conversation
+            ), "Generating..."
 
     print("flushed result to gradio")
     torch.cuda.empty_cache()
@@ -462,7 +466,7 @@ def retry(
         max_length_tokens,
         max_context_length_tokens,
         model_select_dropdown,
-        args.chunk_size
+        args.chunk_size,
     )
 
 
@@ -524,7 +528,9 @@ def build_demo(args):
                 upload_images = gr.Files(file_types=["image"], show_label=True)
                 gallery = gr.Gallery(columns=[3], height="200px", show_label=True)
 
-                upload_images.change(preview_images, inputs=upload_images, outputs=gallery)
+                upload_images.change(
+                    preview_images, inputs=upload_images, outputs=gallery
+                )
 
                 with gr.Tab(label="Parameter Setting"):
                     top_p = gr.Slider(
@@ -653,16 +659,28 @@ def build_demo(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--model_name", type=str, required=True, choices=NICOLE_MODELS, help="model name")
-    parser.add_argument("--local_path", type=str, default="", help="local Nicole checkpoint, optional")
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        required=True,
+        choices=NICOLE_MODELS,
+        help="model name",
+    )
+    parser.add_argument(
+        "--local_path", type=str, default="", help="local Nicole checkpoint, optional"
+    )
     parser.add_argument("--ip", type=str, default="0.0.0.0", help="ip address")
     parser.add_argument("--port", type=int, default=37913, help="port number")
     parser.add_argument("--root_path", type=str, default="", help="root path")
-    parser.add_argument("--lazy_load", action='store_true')
-    parser.add_argument("--chunk_size", type=int, default=-1,
-                        help="chunk size for the model for prefiiling. "
-                             "When using 40G gpu for nicole-small, set a chunk_size for incremental_prefilling."
-                             "Otherwise, default value is -1, which means we do not use incremental_prefilling.")
+    parser.add_argument("--lazy_load", action="store_true")
+    parser.add_argument(
+        "--chunk_size",
+        type=int,
+        default=-1,
+        help="chunk size for the model for prefiiling. "
+        "When using 40G gpu for nicole-small, set a chunk_size for incremental_prefilling."
+        "Otherwise, default value is -1, which means we do not use incremental_prefilling.",
+    )
     parser.add_argument(
         "--auto_caption",
         action="store_true",
@@ -680,5 +698,5 @@ if __name__ == "__main__":
         inbrowser=False,
         server_name=args.ip,
         server_port=args.port,
-        root_path=args.root_path
+        root_path=args.root_path,
     )

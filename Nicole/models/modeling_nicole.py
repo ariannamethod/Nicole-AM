@@ -1,29 +1,29 @@
-""" PyTorch Nicole model and compatible with both NicoleV2 and NicoleV3"""
+"""PyTorch Nicole model and compatible with both NicoleV2 and NicoleV3"""
+
 import math
 import warnings
 from typing import List, Optional, Tuple, Union
-import numpy as np
 
+import numpy as np
 import torch
+import torch.distributed as dist
 import torch.nn.functional as F
 import torch.utils.checkpoint
-import torch.distributed as dist
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask
-from transformers.models.llama.modeling_llama import (
-    LlamaAttention,
-    LlamaFlashAttention2
-)
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
     SequenceClassifierOutputWithPast,
 )
 from transformers.modeling_utils import PreTrainedModel
+from transformers.models.llama.modeling_llama import (
+    LlamaAttention,
+    LlamaFlashAttention2,
+)
 from transformers.pytorch_utils import (
     ALL_LAYERNORM_LAYERS,
     is_torch_greater_or_equal_than_1_13,
@@ -387,9 +387,7 @@ class MoEGate(nn.Module):
             )
             group_idx = torch.topk(
                 group_scores, k=self.topk_group, dim=-1, sorted=False
-            )[
-                1
-            ]
+            )[1]
             group_mask = torch.zeros_like(group_scores)
             group_mask.scatter_(1, group_idx, 1)
             score_mask = (
@@ -405,15 +403,17 @@ class MoEGate(nn.Module):
             )
         elif self.topk_method == "noaux_tc":
             assert not self.training
-            scores_for_choice = scores.view(bsz * seq_len, -1) + self.e_score_correction_bias.unsqueeze(0)
+            scores_for_choice = scores.view(
+                bsz * seq_len, -1
+            ) + self.e_score_correction_bias.unsqueeze(0)
             group_scores = (
-                scores_for_choice.view(bsz * seq_len, self.n_group, -1).topk(2, dim=-1)[0].sum(dim = -1)
+                scores_for_choice.view(bsz * seq_len, self.n_group, -1)
+                .topk(2, dim=-1)[0]
+                .sum(dim=-1)
             )
             group_idx = torch.topk(
                 group_scores, k=self.topk_group, dim=-1, sorted=False
-            )[
-                1
-            ]
+            )[1]
             group_mask = torch.zeros_like(group_scores)
             group_mask.scatter_(1, group_idx, 1)
             score_mask = (
@@ -424,12 +424,10 @@ class MoEGate(nn.Module):
                 .reshape(bsz * seq_len, -1)
             )
             tmp_scores = scores_for_choice.masked_fill(~score_mask.bool(), 0.0)
-            _, topk_idx = torch.topk(
-                tmp_scores, k=self.top_k, dim=-1, sorted=False
-            )
+            _, topk_idx = torch.topk(tmp_scores, k=self.top_k, dim=-1, sorted=False)
             topk_weight = scores.gather(1, topk_idx)
 
-      ### select top-k experts
+        ### select top-k experts
         if self.topk_method == "greedy":
             topk_weight, topk_idx = torch.topk(
                 scores, k=self.top_k, dim=-1, sorted=False
@@ -458,9 +456,13 @@ class MoEGate(nn.Module):
             )
         elif self.topk_method == "noaux_tc":
             assert not self.training
-            scores_for_choice = scores.view(bsz * seq_len, -1) + self.e_score_correction_bias.unsqueeze(0)
+            scores_for_choice = scores.view(
+                bsz * seq_len, -1
+            ) + self.e_score_correction_bias.unsqueeze(0)
             group_scores = (
-                scores_for_choice.view(bsz * seq_len, self.n_group, -1).topk(2, dim=-1)[0].sum(dim = -1)
+                scores_for_choice.view(bsz * seq_len, self.n_group, -1)
+                .topk(2, dim=-1)[0]
+                .sum(dim=-1)
             )  # [n, n_group]
             group_idx = torch.topk(
                 group_scores, k=self.topk_group, dim=-1, sorted=False
@@ -476,10 +478,10 @@ class MoEGate(nn.Module):
                 )
                 .reshape(bsz * seq_len, -1)
             )  # [n, e]
-            tmp_scores = scores_for_choice.masked_fill(~score_mask.bool(), 0.0)  # [n, e]
-            _, topk_idx = torch.topk(
-                tmp_scores, k=self.top_k, dim=-1, sorted=False
-            )
+            tmp_scores = scores_for_choice.masked_fill(
+                ~score_mask.bool(), 0.0
+            )  # [n, e]
+            _, topk_idx = torch.topk(tmp_scores, k=self.top_k, dim=-1, sorted=False)
             topk_weight = scores.gather(1, topk_idx)
 
         ### norm gate to sum 1
@@ -575,9 +577,7 @@ class NicoleV2MoE(nn.Module):
             self.ep_rank = 0
             self.experts = nn.ModuleList(
                 [
-                    NicoleV2MLP(
-                        config, intermediate_size=config.moe_intermediate_size
-                    )
+                    NicoleV2MLP(config, intermediate_size=config.moe_intermediate_size)
                     for i in range(config.n_routed_experts)
                 ]
             )
@@ -874,16 +874,20 @@ class NicoleV2Attention(nn.Module):
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
             compressed_kv = compressed_kv.unsqueeze(1)
-            k_pe, compressed_kv = past_key_value.update(k_pe, compressed_kv, self.layer_idx, cache_kwargs)
+            k_pe, compressed_kv = past_key_value.update(
+                k_pe, compressed_kv, self.layer_idx, cache_kwargs
+            )
             compressed_kv = compressed_kv.squeeze(1)
 
         kv_b_proj = self.kv_b_proj.weight.view(self.num_heads, -1, self.kv_lora_rank)
-        q_absorb = kv_b_proj[:, :self.qk_nope_head_dim, :]
-        out_absorb = kv_b_proj[:, self.qk_nope_head_dim:, :]
+        q_absorb = kv_b_proj[:, : self.qk_nope_head_dim, :]
+        out_absorb = kv_b_proj[:, self.qk_nope_head_dim :, :]
 
         q_nope = torch.matmul(q_nope, q_absorb)
-        attn_weights = (torch.matmul(q_pe, k_pe.mT) +
-                        torch.matmul(q_nope, compressed_kv.unsqueeze(-3).mT)) * self.softmax_scale
+        attn_weights = (
+            torch.matmul(q_pe, k_pe.mT)
+            + torch.matmul(q_nope, compressed_kv.unsqueeze(-3).mT)
+        ) * self.softmax_scale
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
                 f"Attention weights should be of size {(bsz, self.num_heads, q_len, kv_seq_len)}, but is"
@@ -904,7 +908,7 @@ class NicoleV2Attention(nn.Module):
         attn_weights = nn.functional.dropout(
             attn_weights, p=self.attention_dropout, training=self.training
         )
-        attn_output = torch.einsum('bhql,blc->bhqc', attn_weights, compressed_kv)
+        attn_output = torch.einsum("bhql,blc->bhqc", attn_weights, compressed_kv)
 
         attn_output = torch.matmul(attn_output, out_absorb.mT)
 
@@ -1207,13 +1211,13 @@ class NicoleV2FlashAttention2(NicoleV2Attention):
 ATTENTION_CLASSES = {
     "eager": NicoleV2Attention,
     "flash_attention_2": NicoleV2FlashAttention2,
-
     "mla_eager": NicoleV2Attention,
     "mla_flash_attention_2": NicoleV2FlashAttention2,
-
     "mha_eager": LlamaAttention,
-    "mha_flash_attention_2": LlamaFlashAttention2
+    "mha_flash_attention_2": LlamaFlashAttention2,
 }
+
+
 class NicoleV2DecoderLayer(nn.Module):
     def __init__(self, config: NicoleV2Config, layer_idx: int):
         super().__init__()
@@ -1470,7 +1474,7 @@ class NicoleV2Model(NicoleV2PreTrainedModel):
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None
+        cache_position: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         output_attentions = (
             output_attentions
@@ -1645,18 +1649,18 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
         output_type=CausalLMOutputWithPast, config_class=_CONFIG_FOR_DOC
     )
     def forward(
-            self,
-            input_ids: torch.LongTensor = None,
-            attention_mask: Optional[torch.Tensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_values: Optional[List[torch.FloatTensor]] = None,
-            inputs_embeds: Optional[torch.FloatTensor] = None,
-            labels: Optional[torch.LongTensor] = None,
-            use_cache: Optional[bool] = None,
-            output_attentions: Optional[bool] = None,
-            output_hidden_states: Optional[bool] = None,
-            return_dict: Optional[bool] = None,
-            cache_position: Optional[torch.LongTensor] = None
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+        cache_position: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
         r"""
         Args:
@@ -1708,7 +1712,7 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
-            cache_position=cache_position
+            cache_position=cache_position,
         )
 
         hidden_states = outputs[0]
@@ -1740,12 +1744,12 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
         )
 
     def prepare_inputs_for_generation(
-            self,
-            input_ids,
-            past_key_values=None,
-            attention_mask=None,
-            inputs_embeds=None,
-            **kwargs,
+        self,
+        input_ids,
+        past_key_values=None,
+        attention_mask=None,
+        inputs_embeds=None,
+        **kwargs,
     ):
         past_length = 0
         if past_key_values is not None:
@@ -1761,8 +1765,11 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
             # 1 - If the length of the attention_mask exceeds the length of input_ids, then we are in a setting where
             # some of the inputs are exclusively passed as part of the cache (e.g. when passing input_embeds as
             # input)
-            if attention_mask is not None and attention_mask.shape[1] > input_ids.shape[1]:
-                input_ids = input_ids[:, -(attention_mask.shape[1] - past_length):]
+            if (
+                attention_mask is not None
+                and attention_mask.shape[1] > input_ids.shape[1]
+            ):
+                input_ids = input_ids[:, -(attention_mask.shape[1] - past_length) :]
             # 2 - If the past_length is smaller than input_ids', then input_ids holds all input tokens. We can discard
             # input_ids based on the past_length.
             elif past_length < input_ids.shape[1]:
@@ -1771,9 +1778,9 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
 
             # If we are about to go beyond the maximum cache length, we need to crop the input attention mask.
             if (
-                    max_cache_length is not None
-                    and attention_mask is not None
-                    and cache_length + input_ids.shape[1] > max_cache_length
+                max_cache_length is not None
+                and attention_mask is not None
+                and cache_length + input_ids.shape[1] > max_cache_length
             ):
                 attention_mask = attention_mask[:, -max_cache_length:]
 
@@ -1783,7 +1790,7 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
             position_ids = attention_mask.long().cumsum(-1) - 1
             position_ids.masked_fill_(attention_mask == 0, 1)
             if past_key_values:
-                position_ids = position_ids[:, -input_ids.shape[1]:]
+                position_ids = position_ids[:, -input_ids.shape[1] :]
 
         if self.generation_config.cache_implementation == "static":
             # generation with static cache
@@ -1797,7 +1804,11 @@ class NicoleV2ForCausalLM(NicoleV2PreTrainedModel):
 
         # TODO @gante we should only keep a `cache_position` in generate, and do +=1.
         # same goes for position ids. Could also help with continued generation.
-        cache_position = torch.arange(past_length, past_length + position_ids.shape[-1], device=position_ids.device)
+        cache_position = torch.arange(
+            past_length,
+            past_length + position_ids.shape[-1],
+            device=position_ids.device,
+        )
 
         # if `inputs_embeds` are passed, we only want to use them in the 1st generation step
         if inputs_embeds is not None and past_key_values is None:
@@ -1865,17 +1876,17 @@ class NicoleV2ForSequenceClassification(NicoleV2PreTrainedModel):
 
     @add_start_docstrings_to_model_forward(NicoleV2_INPUTS_DOCSTRING)
     def forward(
-            self,
-            input_ids: torch.LongTensor = None,
-            attention_mask: Optional[torch.Tensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_values: Optional[List[torch.FloatTensor]] = None,
-            inputs_embeds: Optional[torch.FloatTensor] = None,
-            labels: Optional[torch.LongTensor] = None,
-            use_cache: Optional[bool] = None,
-            output_attentions: Optional[bool] = None,
-            output_hidden_states: Optional[bool] = None,
-            return_dict: Optional[bool] = None,
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
     ) -> Union[Tuple, SequenceClassifierOutputWithPast]:
         r"""
         labels (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
@@ -1915,7 +1926,7 @@ class NicoleV2ForSequenceClassification(NicoleV2PreTrainedModel):
         else:
             if input_ids is not None:
                 sequence_lengths = (
-                        torch.eq(input_ids, self.config.pad_token_id).int().argmax(-1) - 1
+                    torch.eq(input_ids, self.config.pad_token_id).int().argmax(-1) - 1
                 ).to(logits.device)
             else:
                 sequence_lengths = -1
@@ -1931,7 +1942,7 @@ class NicoleV2ForSequenceClassification(NicoleV2PreTrainedModel):
                 if self.num_labels == 1:
                     self.config.problem_type = "regression"
                 elif self.num_labels > 1 and (
-                        labels.dtype == torch.long or labels.dtype == torch.int
+                    labels.dtype == torch.long or labels.dtype == torch.int
                 ):
                     self.config.problem_type = "single_label_classification"
                 else:

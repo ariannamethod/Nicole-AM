@@ -1,8 +1,8 @@
 import sys
 import types
 
-if 'PIL' not in sys.modules:
-    pil_stub = types.ModuleType('PIL')
+if "PIL" not in sys.modules:
+    pil_stub = types.ModuleType("PIL")
 
     class DummyImage:
         pass
@@ -16,13 +16,13 @@ if 'PIL' not in sys.modules:
     pil_stub.Image = DummyImage
     pil_stub.ImageDraw = DummyImageDraw
     pil_stub.ImageFont = DummyImageFont
-    sys.modules['PIL'] = pil_stub
-    sys.modules['PIL.Image'] = DummyImage
-    sys.modules['PIL.ImageDraw'] = DummyImageDraw
-    sys.modules['PIL.ImageFont'] = DummyImageFont
+    sys.modules["PIL"] = pil_stub
+    sys.modules["PIL.Image"] = DummyImage
+    sys.modules["PIL.ImageDraw"] = DummyImageDraw
+    sys.modules["PIL.ImageFont"] = DummyImageFont
 
-if 'gradio' not in sys.modules:
-    gradio_stub = types.ModuleType('gradio')
+if "gradio" not in sys.modules:
+    gradio_stub = types.ModuleType("gradio")
 
     class DummySoft:
         def __init__(self, *args, **kwargs):
@@ -44,42 +44,42 @@ if 'gradio' not in sys.modules:
         sizes = DummySizes()
 
     gradio_stub.themes = DummyThemes()
-    sys.modules['gradio'] = gradio_stub
+    sys.modules["gradio"] = gradio_stub
 
-if 'mdtex2html' not in sys.modules:
-    mdtex_stub = types.ModuleType('mdtex2html')
+if "mdtex2html" not in sys.modules:
+    mdtex_stub = types.ModuleType("mdtex2html")
 
     def convert(text, extensions=None):
         return text
 
     mdtex_stub.convert = convert
-    sys.modules['mdtex2html'] = mdtex_stub
+    sys.modules["mdtex2html"] = mdtex_stub
 
-if 'markdown' not in sys.modules:
-    markdown_stub = types.ModuleType('markdown')
+if "markdown" not in sys.modules:
+    markdown_stub = types.ModuleType("markdown")
 
     def markdown(text, extensions=None):
         return text
 
     markdown_stub.markdown = markdown
-    sys.modules['markdown'] = markdown_stub
+    sys.modules["markdown"] = markdown_stub
 
-if 'pygments' not in sys.modules:
-    pygments_stub = types.ModuleType('pygments')
+if "pygments" not in sys.modules:
+    pygments_stub = types.ModuleType("pygments")
 
     def highlight(code, lexer, formatter):
         return code
 
     pygments_stub.highlight = highlight
 
-    formatters_stub = types.ModuleType('pygments.formatters')
+    formatters_stub = types.ModuleType("pygments.formatters")
 
     class HtmlFormatter:
         pass
 
     formatters_stub.HtmlFormatter = HtmlFormatter
 
-    lexers_stub = types.ModuleType('pygments.lexers')
+    lexers_stub = types.ModuleType("pygments.lexers")
 
     class ClassNotFound(Exception):
         pass
@@ -94,9 +94,9 @@ if 'pygments' not in sys.modules:
     lexers_stub.get_lexer_by_name = get_lexer_by_name
     lexers_stub.guess_lexer = guess_lexer
 
-    sys.modules['pygments'] = pygments_stub
-    sys.modules['pygments.formatters'] = formatters_stub
-    sys.modules['pygments.lexers'] = lexers_stub
+    sys.modules["pygments"] = pygments_stub
+    sys.modules["pygments.formatters"] = formatters_stub
+    sys.modules["pygments.lexers"] = lexers_stub
 
 from Nicole.serve.app_modules.utils import is_variable_assigned
 

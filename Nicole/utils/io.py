@@ -10,8 +10,10 @@ from transformers import AutoModelForCausalLM
 
 def load_pretrained_model(model_path: str):
 
-    from Nicole.models.processing_nicole_vl_v2 import NicoleVLV2Processor as NicoleProcessor
     from Nicole.models.modeling_nicole import NicoleV2ForCausalLM
+    from Nicole.models.processing_nicole_vl_v2 import (
+        NicoleVLV2Processor as NicoleProcessor,
+    )
 
     vl_chat_processor = NicoleProcessor.from_pretrained(model_path)
     tokenizer = vl_chat_processor.tokenizer
