@@ -100,7 +100,7 @@ Some files are kept only for reference and are not required for running Nicole:
 
 Basic syntax checks succeed (`py_compile`), but static analysis with `ruff` currently reports several unused imports and variables across the model files. These issues do not prevent execution but should be cleaned up for a production deployment.
 
-Nicole is provided as-is under the same license as the upstream DeepSeek-VL 2 project. The full text is available in [LICENSE-CODE](LICENSE-CODE).
+Nicole is provided as-is under the Apache License 2.0. The full text is available in [LICENSE-CODE](LICENSE-CODE).
 
 ## Recent Additions
 
@@ -130,4 +130,4 @@ Ultimately, **A** arises from open-source collaboration, **B** evolves through s
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE-CODE](LICENSE-CODE) for details.
+This project is licensed under the Apache License 2.0. See [LICENSE-CODE](LICENSE-CODE) for details.
